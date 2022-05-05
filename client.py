@@ -17,15 +17,18 @@ class Client:
         self.sock.connect((host, port))
         self.tk_chat_window = None
 
-        # Открываем всплывающее окно, чтобы пользователь мог ввести имя пользователя, т.е. свой никнэйм
+        # Создаём окно от для ввода никнэйма (имени) пользователя
         msg = tkinter.Tk()
         msg.withdraw()
 
         # Спрашиваем что-нибудь в диалоговом окне и результатом будет псевдоним, т.е. никнэйм
-        self.nickname = simpledialog.askstring("Nickname", "Please choose a nickname", parent=msg)
-
+        self.nickname = simpledialog.askstring("Nickname", "Please choose a nickname", parent=msg).encode('utf-8')
 
         self.running = True
+
+        if not self.nickname:
+            self.stop()
+            return
 
         # Запускаем два потока (цикл графического интерфейса и поток приема)
         gui_thread = threading.Thread(target=self.gui_loop)
@@ -33,6 +36,7 @@ class Client:
 
         gui_thread.start()
         receive_thread.start()
+
 
     # Функция для создания графического интерфейса
     def gui_loop(self):
@@ -73,7 +77,8 @@ class Client:
     # Функция остановки
     def stop(self):
         self.running = False
-        self.tk_chat_window.destroy()
+        if self.tk_chat_window:
+            self.tk_chat_window.destroy()
         self.sock.close()
         exit(0)
 
@@ -83,9 +88,9 @@ class Client:
         while self.running:
             try:
                 # пытаемся получить сообщение от сервера
-                message = self.sock.recv(1024)
+                message = self.sock.recv(1024).decode('utf-8')
                 if message == 'NICK':
-                    self.sock.send(self.nickname.encode('utf-8'))
+                    self.sock.send(self.nickname)
                 else:
                     if self.tk_chat_window:
                         self.text_area.config(state='normal')

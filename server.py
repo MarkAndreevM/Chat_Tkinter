@@ -27,7 +27,7 @@ def handle(client):
         try:
             # recv(1024) - пытаемся получить сообщение от клиента
             message = client.recv(1024)
-            print(f'{nicknames[clients.index(client)]} says {message}')
+            print(f"{nicknames[clients.index(client)]} says {message.decode('utf-8')}")
             broadcast(message)
         except:
             # Если мы получим ошибку (м.б. Клиент просто отключился или вышел из строя) мы удаляем его
@@ -45,20 +45,21 @@ def receive():
     while True:
         # accept() возвращает адрес клиента и сервера, а затем мы принимаем соединение и у нас есть новый клиент
         client, address = server.accept()
-        print(f'Новый пользователь: {client}!')
-        print(f'Новый адрес: {address}!')
+        print(f'Новый пользователь: {str(client)}!')
+        print(f'Новый адрес: {str(address)}!')
+
         # просим клиента ввести никнэйм и принимаем сообщение при помощи метода recv()
         client.send('NICK'.encode('utf-8'))
-        nickname = client.recv(1024)
+        nickname = client.recv(1024).decode('utf-8')
 
         nicknames.append(nickname)
         clients.append(client)
 
-        print(f'Nickname of the client is {nickname}')
-        broadcast(f'{nickname} connected to the server!\n'.encode('utf-8'))
-        client.send('Connected to the server'.encode('utf-8'))
+        print(f"Nickname of the client is {nickname}")
+        broadcast(f"{nickname} connected to the server!\n".encode('utf-8'))
+        # client.send('Connected to the server'.encode('utf-8'))
 
-        #
+        # Создаем поток
         thread = threading.Thread(target=handle, args=(client,))
         thread.start()
 
